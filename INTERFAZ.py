@@ -6,7 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import FuncFormatter
 from tkinter import messagebox
 from PIL import ImageTk, Image
-import numpy as np
+
 
 
 def abrir_ventana_datos_torsion():
@@ -75,7 +75,7 @@ def abrir_ventana_datos_torsion():
         delta.grid(row=5+i+1, column=1, padx=10, pady=10)
         desplazamientos.append(delta)
 
-    def guardar_datos():
+    def guardar_datos_torsion():
     # Definir guardar los datos ingresados por el usuario, abrir la ventana de resultados de torsion y cerrar la ventana actual
         try:
             abrir_ventana_resultados_torsion([W.get() for W in pesos], [delta.get() for delta in desplazamientos], float(D_entry.get()), float(L_entry.get()), float(b_entry.get()), float(p_entry.get()))
@@ -83,7 +83,7 @@ def abrir_ventana_datos_torsion():
         except ValueError:
             messagebox.showerror("Error", "Todos los campos deben contener valores numéricos.")
     
-    boton_calcular = tk.Button(ventana_datos_torsion, text="Calcular", font=("Arial", 10, "bold"), command=guardar_datos)
+    boton_calcular = tk.Button(ventana_datos_torsion, text="Calcular", font=("Arial", 10, "bold"), command=guardar_datos_torsion)
     boton_calcular.grid(row=14, column=1, pady=10, sticky="nsew")
 
 
@@ -182,13 +182,11 @@ def abrir_ventana_grafica_torsion(pesos, desplazamientos, D, L, b, p):
         G = (T * L) / (J * phi)
         
         valores_G.append(f"{G:.5f}")
-
         resultados.append((f"{tao_max:.5f}", f"{y:.6f}"))
 
     # Calcular el promedio de los valores de G
     promedio_G = round(sum(float(valor_G) for valor_G in valores_G) / len(valores_G), 4)
     
-
     def crear_grafica(frame):
         # Crear figura y ejes para la gráfica
         fig, ax = plt.subplots()
@@ -201,7 +199,6 @@ def abrir_ventana_grafica_torsion(pesos, desplazamientos, D, L, b, p):
         ax.set_ylabel('Esfuerzo torsor máximo (MPa)')
         ax.set_title('Esfuerzo Torsor Máximo vs Deformación Unitaria')
         ax.grid(True)
-
 
         # Mostrar la gráfica
         canvas = FigureCanvasTkAgg(fig, master=ventana_grafica_torsion)
@@ -354,7 +351,7 @@ def abrir_ventana_datos_flexion():
         ventana_datos_flexion.destroy()  # Cerrar la ventana de datos de flexión
         ventana_principal.deiconify()   # Mostrar la ventana principal nuevamente
 
-    def guardar_datos():
+    def guardar_datos_flexion():
     # Verificar si todos los campos están completos
         if any(not peso.get() or not dY.get() for peso, dY in zip(pesos, desplazamientos)):
             messagebox.showerror("Error", "Todos los campos deben estar completos.")
@@ -397,7 +394,7 @@ def abrir_ventana_datos_flexion():
     boton_inicio = tk.Button(ventana_datos_flexion, text="Inicio", font=("Arial", 10, "bold"), command=cerrar_ventana_datos_flexion)
     boton_inicio.grid(row=16, column=0, pady=10, sticky="nsew")
 
-    boton_calcular = tk.Button(ventana_datos_flexion, text="Calcular", font=("Arial", 10, "bold"), command=guardar_datos)
+    boton_calcular = tk.Button(ventana_datos_flexion, text="Calcular", font=("Arial", 10, "bold"), command=guardar_datos_flexion)
     boton_calcular.grid(row=16, column=1, columnspan=2, pady=10, sticky="nsew")
 
 def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud, base, altura, seccion1, punto_deflexion,seleccion_deflexion,seleccion_seccion):
@@ -450,21 +447,26 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
         elif seleccion_seccion == "Circular":
             D = Diametro
             L = longitud
+            a = seccion1
 
             # Calcular Sección 2 de aplicación de la carga en mm
-            b = L - seccion1
+            b = L - a
 
             # Calcular Distancia al Eje neutro en mm
             c = D / 2
 
             # Calcular Momento flector máximo en Nmm
-            M_max = seccion1 * (peso * (L - seccion1) / L)
+            M_max = a * (peso * (L - a) / L)
 
             # Calcular Momento de inercia en mm^4
-            I = (math.pi / 32) * (D ** 4)
+            I = (math.pi / 4) * ((D/2) ** 4)
 
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
+
+            C1 = ((-peso*a)/(6*L*(1+(a/b))))*((a ** 2)+ (3 * b * a) + (2 * (b ** 2)))
+
+            C3 = ((-peso*b)/6*L*(1+(b/a)))*(b ** 2 + (3*b*a) + 2*a**2)
 
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
@@ -485,7 +487,7 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             # Calcular Deflexión máxima
             delta_max = (peso * b * (L ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * L * E * I)
 
-            resultados.append((f"{peso:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}"))
+            resultados.append((f"{peso:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}", f"{C1:.6f}", f"{C3:.6f}"))
             
         else:
             print("Tipo de sección no reconocido.")
@@ -494,7 +496,7 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
         
     # Crear tabla de resultados
     tabla_flexion = ttk.Treeview(ventana_resultados_flexion)
-    tabla_flexion["columns"] = ("Peso", "Deformación", "b","Momento_max", "esf_max", "delta_max")
+    tabla_flexion["columns"] = ("Peso", "Deformación", "b","Momento_max", "esf_max", "delta_max", "C1", "C3")
     tabla_flexion.heading("#0", text="ID")
     tabla_flexion.heading("Peso", text="W [N]")
     tabla_flexion.heading("Deformación", text="δ [mm]")
@@ -502,6 +504,8 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
     tabla_flexion.heading("Momento_max", text="M max [Nmm]")
     tabla_flexion.heading("esf_max", text="σ max [MPa]")
     tabla_flexion.heading("delta_max", text="δ max [MPa]")
+    tabla_flexion.heading("C1", text="C1")
+    tabla_flexion.heading("C3", text="C3")
 
     # Ajustar el ancho de las columnas
     tabla_flexion.column("#0", width=40)  # Ajustar el ancho de la primera columna
@@ -511,6 +515,8 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
     tabla_flexion.column("Momento_max", width=100, anchor="center")  # Ajustar el ancho de la cuarta columna
     tabla_flexion.column("esf_max", width=100, anchor="center")
     tabla_flexion.column("delta_max", width=100, anchor="center")
+    tabla_flexion.column("C1", width=100, anchor="center")
+    tabla_flexion.column("C3", width=100, anchor="center")
     
     for i, resultado in enumerate(resultados):
         tabla_flexion.insert("", "end", text=str(i+1), values=resultado)

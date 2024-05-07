@@ -5,13 +5,27 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.ticker import FuncFormatter
 from tkinter import messagebox
+from PIL import ImageTk, Image
+import numpy as np
+
 
 def abrir_ventana_datos_torsion():
     ventana_principal.withdraw()  # Ocultar la ventana principal
     ventana_datos_torsion = tk.Toplevel(ventana_principal)
     ventana_datos_torsion.title("Datos de Entrada - Torsión")
-    ventana_datos_torsion.geometry("600x600")
-    ventana_datos_torsion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+    ventana_datos_torsion.geometry("800x600")
+    ventana_datos_torsion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
+
+    #imagen_datos_torsion = tk.PhotoImage(file="C:/Users/camil/Desktop/U/PG/PROGRAMA/comp_torsion.png")
+    # Crear y cargar la imagen
+    imagen_datos_torsion = Image.open("C:/Users/camil/Desktop/U/PG/PROGRAMA/comp_torsion2.png")
+    imagen_datos_torsion = imagen_datos_torsion.resize((360, 450))
+    imagen_datos_torsion = ImageTk.PhotoImage(imagen_datos_torsion)
+
+    # Crear etiqueta para la imagen
+    etiqueta_imagen = tk.Label(ventana_datos_torsion, image=imagen_datos_torsion)
+    etiqueta_imagen.image = imagen_datos_torsion  # Asegurarse de mantener una referencia a la imagen
+    etiqueta_imagen.grid(row=0, column=2, padx=10, pady=10, rowspan=12)  # Ajustar la posición según sea necesario
 
     # Etiquetas y campos de entrada para los datos de torsión
     etiqueta_seccion = tk.Label(ventana_datos_torsion, text="Sección de la barra:",  font=("Arial", 10, "bold"))
@@ -22,22 +36,22 @@ def abrir_ventana_datos_torsion():
     menu_seccion = tk.OptionMenu(ventana_datos_torsion, seleccion_seccion, *opciones_seccion)
     menu_seccion.grid(row=0, column=1, padx=15, pady=10)
 
-    etiqueta_diametro = tk.Label(ventana_datos_torsion, text="Diámetro de la barra [mm]:", font=("Arial", 10, "bold"))
+    etiqueta_diametro = tk.Label(ventana_datos_torsion, text="Diámetro de la barra (D) [mm]:", font=("Arial", 10, "bold"))
     etiqueta_diametro.grid(row=1, column=0, padx=10, pady=10, sticky="w")
     D_entry = tk.Entry(ventana_datos_torsion)
     D_entry.grid(row=1, column=1, padx=10, pady=10)
 
-    etiqueta_longitud = tk.Label(ventana_datos_torsion, text="Longitud de la barra [mm]:", font=("Arial", 10, "bold"))
+    etiqueta_longitud = tk.Label(ventana_datos_torsion, text="Longitud de la barra (L) [mm]:", font=("Arial", 10, "bold"))
     etiqueta_longitud.grid(row=2, column=0, padx=10, pady=10, sticky="w")
     L_entry = tk.Entry(ventana_datos_torsion)
     L_entry.grid(row=2, column=1, padx=10, pady=10)
 
-    etiqueta_brazo_giro = tk.Label(ventana_datos_torsion, text="Brazo de giro [mm]:", font=("Arial", 10, "bold"))
+    etiqueta_brazo_giro = tk.Label(ventana_datos_torsion, text="Brazo de giro (b) [mm]:", font=("Arial", 10, "bold"))
     etiqueta_brazo_giro.grid(row=3, column=0, padx=10, pady=10, sticky="w")
     b_entry = tk.Entry(ventana_datos_torsion)
     b_entry.grid(row=3, column=1, padx=10, pady=10)
 
-    etiqueta_brazo_palanca = tk.Label(ventana_datos_torsion, text="Brazo de palanca [mm]:", font=("Arial", 10, "bold"))
+    etiqueta_brazo_palanca = tk.Label(ventana_datos_torsion, text="Brazo de palanca (p) [mm]:", font=("Arial", 10, "bold"))
     etiqueta_brazo_palanca.grid(row=4, column=0, padx=10, pady=10, sticky="w")
     p_entry = tk.Entry(ventana_datos_torsion)
     p_entry.grid(row=4, column=1, padx=10, pady=10)
@@ -70,7 +84,8 @@ def abrir_ventana_datos_torsion():
             messagebox.showerror("Error", "Todos los campos deben contener valores numéricos.")
     
     boton_calcular = tk.Button(ventana_datos_torsion, text="Calcular", font=("Arial", 10, "bold"), command=guardar_datos)
-    boton_calcular.grid(row=14, column=1, columnspan=2, pady=10, sticky="nsew")
+    boton_calcular.grid(row=14, column=1, pady=10, sticky="nsew")
+
 
     # Botón para ir a la ventana principal nuevamente
     def cerrar_ventana_datos_torsion():
@@ -80,10 +95,11 @@ def abrir_ventana_datos_torsion():
     boton_inicio = tk.Button(ventana_datos_torsion, text="Inicio", font=("Arial", 10, "bold"), command=cerrar_ventana_datos_torsion)
     boton_inicio.grid(row=14, column=0, pady=10, sticky="nsew")
 
+
 def abrir_ventana_resultados_torsion(pesos, desplazamientos, D, L, b, p):
     ventana_resultados_torsion = tk.Toplevel(ventana_principal)
     ventana_resultados_torsion.title("Resultados ensayo torsión")
-    ventana_resultados_torsion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+    ventana_resultados_torsion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
     resultados = []
     for W, dY in zip(pesos, desplazamientos):
@@ -148,7 +164,7 @@ def abrir_ventana_grafica_torsion(pesos, desplazamientos, D, L, b, p):
     ventana_grafica_torsion = tk.Toplevel(ventana_principal)
     ventana_grafica_torsion.title("Gráfica y tabla de resultados - Torsión")
     ventana_grafica_torsion.geometry("900x550")
-    ventana_grafica_torsion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+    ventana_grafica_torsion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
     
     valores_G = []
     resultados = []
@@ -179,12 +195,14 @@ def abrir_ventana_grafica_torsion(pesos, desplazamientos, D, L, b, p):
         deformacion_unitaria = [float(resultado[1]) for resultado in resultados]
         esfuerzo_torsor_maximo = [float(resultado[0]) for resultado in resultados]
         fig, ax = plt.subplots(figsize=(6, 4)) #ajustar el tamaño de la grafica
+        
         ax.plot(deformacion_unitaria, esfuerzo_torsor_maximo, marker='o', linestyle='-', color="black")
         ax.set_xlabel('Deformación unitaria x10^6')
         ax.set_ylabel('Esfuerzo torsor máximo (MPa)')
         ax.set_title('Esfuerzo Torsor Máximo vs Deformación Unitaria')
         ax.grid(True)
-        
+
+
         # Mostrar la gráfica
         canvas = FigureCanvasTkAgg(fig, master=ventana_grafica_torsion)
         canvas.draw()
@@ -248,7 +266,7 @@ def abrir_ventana_datos_flexion():
     ventana_datos_flexion = tk.Toplevel(ventana_principal)
     ventana_datos_flexion.title("Datos de Entrada - Flexión")
     ventana_datos_flexion.geometry("600x600")
-    ventana_datos_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+    ventana_datos_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
     # Función para mostrar u ocultar los campos de entrada según la selección de la sección
     def mostrar_ocultar_rectangular():
@@ -385,7 +403,7 @@ def abrir_ventana_datos_flexion():
 def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud, base, altura, seccion1, punto_deflexion,seleccion_deflexion,seleccion_seccion):
     ventana_resultados_flexion = tk.Toplevel(ventana_principal)
     ventana_resultados_flexion.title("Resultados de Flexión")
-    ventana_resultados_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+    ventana_resultados_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
     resultados = []
     for peso, dY in zip(pesos, desplazamientos):
@@ -516,7 +534,7 @@ def abrir_ventana_grafica_flexion(pesos, desplazamientos, Diametro, longitud, ba
     ventana_grafica_flexion = tk.Toplevel(ventana_principal)
     ventana_grafica_flexion.title("Gráfica y tabla de resultados - Flexion")
     ventana_grafica_flexion.geometry("900x550")
-    ventana_grafica_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+    ventana_grafica_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
     valores_E = []
     resultados = []
@@ -674,14 +692,14 @@ def abrir_ventana_grafica_flexion(pesos, desplazamientos, Diametro, longitud, ba
 ventana_principal = tk.Tk()
 ventana_principal.title("Ensayos de Resistencia de Materiales")
 ventana_principal.geometry("600x400")
-ventana_principal.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_de_la_universidad_del_atl__ntico_svg_HDx_icon.ico')
+ventana_principal.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
 # Maximizar la ventana principal
 # ventana_principal.state("zoomed")
 
 # Cargar imagenes
-imagen_torsion = tk.PhotoImage(file="C:/Users/camil/Desktop/U/PG/PROGRAMA/torsion.png")
-imagen_flexion = tk.PhotoImage(file="C:/Users/camil/Desktop/U/PG/PROGRAMA/flexion.png")
+imagen_torsion = tk.PhotoImage(file="C:/Users/camil/Desktop/U/PG/PROGRAMA/torsionD.png")
+imagen_flexion = tk.PhotoImage(file="C:/Users/camil/Desktop/U/PG/PROGRAMA/flexion1.png")
 
 # Dividir la ventana principal en dos partes
 marco_torsion = tk.Frame(ventana_principal, width=280, height=400, bg="lightgray")
