@@ -411,9 +411,17 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             B = base
             H = altura
 
+            L = longitud
+            a = seccion1
+
             # Calcular Sección 2 de aplicación de la carga en mm
             b = longitud - seccion1
             c = H / 2
+
+            #Reaaciones en los apoyos
+            RA=(peso*b)/L
+            RB=(peso*a)/L
+
             # Calcular Momento de inercia en mm^4
             I = (B * (H ** 3)) / 12
 
@@ -423,17 +431,21 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
 
+            C1 = ((-peso*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
+
+            C3 = ((-peso*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
+
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
             if Pd == "Centro de la barra":
-                E = (peso * b * (3 * longitud ** 2 - 4 * b ** 2)) / (48 * dY * I)
+                E = (peso * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
 
             elif Pd == "En x <= a":
                 x = float(punto_deflexion)
-                E = ((peso * b * x) * (longitud ** 2 - b ** 2 - x ** 2)) / (6 * longitud * I * dY)
+                E = ((RA/6)*(x**3)+(C1*x))/(I*dY)
 
             elif Pd == "En x > a":
-                print("Opción aún no disponible")
+                E = ((RB/6)*(L-x)**3+C3*(L-x))/(I*dY)
 
             else:
                 print("Opción de medición de deflexión no válida.")
@@ -455,6 +467,10 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             # Calcular Distancia al Eje neutro en mm
             c = D / 2
 
+            #Reaaciones en los apoyos
+            RA=(peso*b)/L
+            RB=(peso*a)/L
+
             # Calcular Momento flector máximo en Nmm
             M_max = a * (peso * (L - a) / L)
 
@@ -464,22 +480,22 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
 
-            C1 = ((-peso*a)/(6*L*(1+(a/b))))*((a ** 2)+ (3 * b * a) + (2 * (b ** 2)))
+            C1 = ((-peso*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
 
-            C3 = ((-peso*b)/6*L*(1+(b/a)))*(b ** 2 + (3*b*a) + 2*a**2)
+            C3 = ((-peso*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
 
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
             if Pd == "Centro de la barra":
-                E = (peso * b * (3 * L ** 2 - 4 * b ** 2)) / (48 * dY * I)
+                E = (peso * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
 
             elif Pd == "En x <= a":
                 x = float(punto_deflexion)
-                E = ((peso * b * x) * (L ** 2 - b ** 2 - x ** 2)) / (6 * L * I * dY)
+                E = ((RA/6)*(x**3)+(C1*x))/(I*dY)
 
             elif Pd == "En x > a":
-                print("Opción aún no disponible")
-
+                E = ((RB/6)*(L-x)**3+C3*(L-x))/(I*dY)
+                
             else:
                 print("Opción de medición de deflexión no válida.")
                 return None
@@ -487,7 +503,7 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             # Calcular Deflexión máxima
             delta_max = (peso * b * (L ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * L * E * I)
 
-            resultados.append((f"{peso:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}", f"{C1:.6f}", f"{C3:.6f}"))
+            resultados.append((f"{peso:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}"))
             
         else:
             print("Tipo de sección no reconocido.")
@@ -496,16 +512,14 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
         
     # Crear tabla de resultados
     tabla_flexion = ttk.Treeview(ventana_resultados_flexion)
-    tabla_flexion["columns"] = ("Peso", "Deformación", "b","Momento_max", "esf_max", "delta_max", "C1", "C3")
+    tabla_flexion["columns"] = ("Peso", "Deformación", "b","Momento_max", "esf_max", "delta_max")
     tabla_flexion.heading("#0", text="ID")
     tabla_flexion.heading("Peso", text="W [N]")
     tabla_flexion.heading("Deformación", text="δ [mm]")
     tabla_flexion.heading("b", text="b [mm]")
     tabla_flexion.heading("Momento_max", text="M max [Nmm]")
     tabla_flexion.heading("esf_max", text="σ max [MPa]")
-    tabla_flexion.heading("delta_max", text="δ max [MPa]")
-    tabla_flexion.heading("C1", text="C1")
-    tabla_flexion.heading("C3", text="C3")
+    tabla_flexion.heading("delta_max", text="δ max [MPa]**")
 
     # Ajustar el ancho de las columnas
     tabla_flexion.column("#0", width=40)  # Ajustar el ancho de la primera columna
@@ -515,8 +529,7 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
     tabla_flexion.column("Momento_max", width=100, anchor="center")  # Ajustar el ancho de la cuarta columna
     tabla_flexion.column("esf_max", width=100, anchor="center")
     tabla_flexion.column("delta_max", width=100, anchor="center")
-    tabla_flexion.column("C1", width=100, anchor="center")
-    tabla_flexion.column("C3", width=100, anchor="center")
+    
     
     for i, resultado in enumerate(resultados):
         tabla_flexion.insert("", "end", text=str(i+1), values=resultado)
@@ -530,7 +543,7 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
 
     def graficos_flexion():
             abrir_ventana_grafica_flexion(pesos, desplazamientos, Diametro, longitud, base, altura, seccion1, punto_deflexion, seleccion_deflexion, seleccion_seccion)
-            ventana_resultados_flexion.destroy()
+            #ventana_resultados_flexion.destroy()
     
     boton_graficos = tk.Button(marco_boton_flexion, text="Graficar", font=("Arial", 10, "bold"), command=graficos_flexion)
     #boton_graficos.grid(row=8, column=1, pady=10, sticky="nsew")
