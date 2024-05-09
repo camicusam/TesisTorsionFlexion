@@ -332,9 +332,9 @@ def abrir_ventana_datos_flexion():
     etiqueta_pesos.grid(row=9, column=0, padx=10, pady=10, sticky="nsew")
     pesos = []
     for i in range(6):
-        peso = tk.Entry(ventana_datos_flexion)
-        peso.grid(row=9+i+1, column=0, pady=10)
-        pesos.append(peso)
+        w = tk.Entry(ventana_datos_flexion)
+        w.grid(row=9+i+1, column=0, pady=10)
+        pesos.append(w)
     
     etiqueta_desplazamientos_medido = tk.Label(ventana_datos_flexion, text="Desplazamiento en Y [mm]:", font=("Arial", 10, "bold"))
     etiqueta_desplazamientos_medido.grid(row=9, column=1, padx=10, pady=10, sticky="nsew")
@@ -353,12 +353,12 @@ def abrir_ventana_datos_flexion():
 
     def guardar_datos_flexion():
     # Verificar si todos los campos están completos
-        if any(not peso.get() or not dY.get() for peso, dY in zip(pesos, desplazamientos)):
+        if any(not w.get() or not dY.get() for w, dY in zip(pesos, desplazamientos)):
             messagebox.showerror("Error", "Todos los campos deben estar completos.")
             return
         try:
             # Convertir los valores de los campos a flotantes
-            pesos_float = [float(peso.get()) for peso in pesos]
+            pesos_float = [float(w.get()) for w in pesos]
             desplazamientos_float = [float(dY.get()) for dY in desplazamientos]
             if Diametro.get():
                 Diametro_float = float(Diametro.get())
@@ -403,42 +403,43 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
     ventana_resultados_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
     resultados = []
-    for peso, dY in zip(pesos, desplazamientos):
-        peso = float(peso)
+    for w, dY in zip(pesos, desplazamientos):
+        w = float(w)
         dY = float(dY)
         
+        L = longitud
+        a = seccion1
+
         if seleccion_seccion == "Rectangular":
             B = base
             H = altura
-
-            L = longitud
-            a = seccion1
+            
 
             # Calcular Sección 2 de aplicación de la carga en mm
             b = longitud - seccion1
             c = H / 2
 
             #Reaaciones en los apoyos
-            RA=(peso*b)/L
-            RB=(peso*a)/L
+            RA=(w*b)/L
+            RB=(w*a)/L
 
             # Calcular Momento de inercia en mm^4
             I = (B * (H ** 3)) / 12
 
             # Calcular Momento flector máximo en Nmm
-            M_max = seccion1 * (peso * (longitud - seccion1) / longitud)
+            M_max = a * (w * (L - a) / L)
 
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
 
-            C1 = ((-peso*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
-
-            C3 = ((-peso*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
+            #constantes de integración
+            C1 = ((-w*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
+            C3 = ((-w*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
 
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
             if Pd == "Centro de la barra":
-                E = (peso * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
+                E = (w * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
 
             elif Pd == "En x <= a":
                 x = float(punto_deflexion)
@@ -447,19 +448,16 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             elif Pd == "En x > a":
                 E = ((RB/6)*(L-x)**3+C3*(L-x))/(I*dY)
 
-            else:
-                print("Opción de medición de deflexión no válida.")
-                return None
-
             # Calcular Deflexión máxima
-            delta_max = (peso * b * (longitud ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * longitud * E * I)
+            delta_max = (w * b * (longitud ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * longitud * E * I)
 
-            resultados.append([peso, dY, b, M_max, sigma_max, delta_max])
+            #Calcular la deformacion unitaria
+            def_uni = (sigma_max/E)
+
+            resultados.append([f"{w:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}", f"{E:.6f}", f"{def_uni:.7f}"])
 
         elif seleccion_seccion == "Circular":
             D = Diametro
-            L = longitud
-            a = seccion1
 
             # Calcular Sección 2 de aplicación de la carga en mm
             b = L - a
@@ -468,11 +466,11 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             c = D / 2
 
             #Reaaciones en los apoyos
-            RA=(peso*b)/L
-            RB=(peso*a)/L
+            RA=(w*b)/L
+            RB=(w*a)/L
 
             # Calcular Momento flector máximo en Nmm
-            M_max = a * (peso * (L - a) / L)
+            M_max = a * (w * (L - a) / L)
 
             # Calcular Momento de inercia en mm^4
             I = (math.pi / 4) * ((D/2) ** 4)
@@ -480,56 +478,51 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
 
-            C1 = ((-peso*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
-
-            C3 = ((-peso*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
+            C1 = ((-w*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
+            C3 = ((-w*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
 
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
             if Pd == "Centro de la barra":
-                E = (peso * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
+                E = (w * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
 
             elif Pd == "En x <= a":
                 x = float(punto_deflexion)
                 E = ((RA/6)*(x**3)+(C1*x))/(I*dY)
 
             elif Pd == "En x > a":
-                E = ((RB/6)*(L-x)**3+C3*(L-x))/(I*dY)
-                
-            else:
-                print("Opción de medición de deflexión no válida.")
-                return None
+                E = ((RB/6)*((L-x)**3)+C3*(L-x))/(I*dY)
 
             # Calcular Deflexión máxima
-            delta_max = (peso * b * (L ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * L * E * I)
+            delta_max = (w * b * (L ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * L * E * I)
+            #Calcular la deformacion unitaria
+            def_uni = (sigma_max/E)
 
-            resultados.append((f"{peso:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}"))
-            
-        else:
-            print("Tipo de sección no reconocido.")
-            return None
-        
+            resultados.append((f"{w:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}", f"{E:.6f}", f"{def_uni:.7f}"))
         
     # Crear tabla de resultados
     tabla_flexion = ttk.Treeview(ventana_resultados_flexion)
-    tabla_flexion["columns"] = ("Peso", "Deformación", "b","Momento_max", "esf_max", "delta_max")
+    tabla_flexion["columns"] = ("Pesos", "Deformación", "b","Momento_max", "esf_max", "delta_max", "E", "def_uni")
     tabla_flexion.heading("#0", text="ID")
-    tabla_flexion.heading("Peso", text="W [N]")
+    tabla_flexion.heading("Pesos", text="W [N]")
     tabla_flexion.heading("Deformación", text="δ [mm]")
     tabla_flexion.heading("b", text="b [mm]")
     tabla_flexion.heading("Momento_max", text="M max [Nmm]")
     tabla_flexion.heading("esf_max", text="σ max [MPa]")
     tabla_flexion.heading("delta_max", text="δ max [MPa]**")
+    tabla_flexion.heading("E", text="E [MPa]")
+    tabla_flexion.heading("def_uni", text="ε")
 
     # Ajustar el ancho de las columnas
     tabla_flexion.column("#0", width=40)  # Ajustar el ancho de la primera columna
-    tabla_flexion.column("Peso", width=60, anchor="center")  # Ajustar el ancho de la segunda columna
+    tabla_flexion.column("Pesos", width=60, anchor="center")  # Ajustar el ancho de la segunda columna
     tabla_flexion.column("Deformación", width=100, anchor="center")  # Ajustar el ancho de la segunda columna
     tabla_flexion.column("b", width=100, anchor="center")  # Ajustar el ancho de la tercera columna
     tabla_flexion.column("Momento_max", width=100, anchor="center")  # Ajustar el ancho de la cuarta columna
     tabla_flexion.column("esf_max", width=100, anchor="center")
     tabla_flexion.column("delta_max", width=100, anchor="center")
-    
+    tabla_flexion.column("E", width=100, anchor="center")
+    tabla_flexion.column("def_uni", width=100, anchor="center")
     
     for i, resultado in enumerate(resultados):
         tabla_flexion.insert("", "end", text=str(i+1), values=resultado)
@@ -557,20 +550,50 @@ def abrir_ventana_grafica_flexion(pesos, desplazamientos, Diametro, longitud, ba
 
     valores_E = []
     resultados = []
-    for pesos, dY in zip(pesos, desplazamientos):
-        pesos = float(pesos)
+    for w, dY in zip(pesos, desplazamientos):
+        w = float(w)
         dY = float(dY)
+        L = longitud
+        a = seccion1
 
         if seleccion_seccion == "Rectangular":
+            B = base
+            H = altura
+            
             # Calcular Sección 2 de aplicación de la carga en mm
-            b = longitud - seccion1
-            c = altura / 2
+            b = L - a
+            c = H / 2
+            #Reaaciones en los apoyos
+            RA=(pesos*b)/L
+            RB=(pesos*a)/L
             # Calcular Momento de inercia en mm^4
-            I = (base * (altura ** 3)) / 12
+            I = (B * (H ** 3)) / 12
             # Calcular Momento flector máximo en Nmm
-            M_max = seccion1 * (pesos * (longitud - seccion1) / longitud)
+            M_max = a * (w * (L - a) / L)
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
+            C1 = ((-pesos*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
+            C3 = ((-pesos*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
+
+            # Calcular Módulo Elástico en MPa
+            Pd = seleccion_deflexion
+            if Pd == "Centro de la barra":
+                E = (w * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
+
+            elif Pd == "En x <= a":
+                x = float(punto_deflexion)
+                E = ((RA/6)*(x**3)+(C1*x))/(I*dY)
+
+            elif Pd == "En x > a":
+                E = ((RB/6)*(L-x)**3+C3*(L-x))/(I*dY)
+
+            # Calcular Deflexión máxima
+            delta_max = (w * b * (longitud ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * longitud * E * I)
+
+            #Calcular la deformacion unitaria
+            def_uni = (sigma_max/E)
+
+            resultados.append([f"{w:.2f}", f"{dY:.2f}", f"{b:.3f}", f"{M_max:.2f}", f"{sigma_max:.5f}", f"{delta_max:.6f}", f"{E:.6f}", f"{def_uni:.6f}"])
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
             
@@ -590,49 +613,44 @@ def abrir_ventana_grafica_flexion(pesos, desplazamientos, Diametro, longitud, ba
 
             # Calcular Deflexión máxima
             delta_max = (pesos * b * (longitud ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * longitud * E * I)
+            #Calcular la deformacion unitaria
+            def_uni = (sigma_max/E)
 
             valores_E.append(E)
-            resultados.append([f"{sigma_max:.5f}", f"{delta_max:.6f}",f"{E:.6f}"])
+            resultados.append([f"{sigma_max:.5f}", f"{def_uni:.7f}",f"{E:.6f}"])
 
         elif seleccion_seccion == "Circular":
             D = Diametro
-            L = longitud
             # Calcular Sección 2 de aplicación de la carga en mm
-            b = L - seccion1
+            b = L - a
             # Calcular Distancia al Eje neutro en mm
             c = D / 2
             # Calcular Momento flector máximo en Nmm
-            M_max = seccion1 * (pesos * (L - seccion1) / L)
+            M_max = a * (w * (L - a) / L)
             # Calcular Momento de inercia en mm^4
-            I = (math.pi / 32) * (D ** 4)
+            I = (math.pi / 4) * ((D/2) ** 4)
             # Calcular Esfuerzo flector máximo en MPa
             sigma_max = (M_max * c) / I
-
+            C1 = ((-w*a)/(6*L*(1+(a/b))))*((a**2)+ (3*b*a) + (2*(b**2)))
+            C3 = ((-w*b)/(6*L*(1+(b/a))))*((b**2)+ (3*b*a) + (2*(a**2)))
+            
             # Calcular Módulo Elástico en MPa
             Pd = seleccion_deflexion
             if Pd == "Centro de la barra":
-                E = (pesos * b * (3 * L ** 2 - 4 * b ** 2)) / (48 * dY * I)
-
+                E = (w * b * (3 * L ** 2 - 4 * b **2))/(48 * dY * I)
             elif Pd == "En x <= a":
                 x = float(punto_deflexion)
-                E = ((pesos * b * x) * (L ** 2 - b ** 2 - x ** 2)) / (6 * L * I * dY)
+                E = ((RA/6)*(x**3)+(C1*x))/(I*dY)
 
             elif Pd == "En x > a":
-                print("Opción aún no disponible")
-
-            else:
-                print("Opción de medición de deflexión no válida.")
-                return None
+                E = ((RB/6)*(L-x)**3+C3*(L-x))/(I*dY)
 
             # Calcular Deflexión máxima
-            delta_max = (pesos * b * (L ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * L * E * I)
+            delta_max = (w * b * (L ** 2 - b ** 2) ** (3/2)) / (9 * math.sqrt(3) * L * E * I)
+            def_uni = (sigma_max/E)
 
             valores_E.append(E)
-            resultados.append((f"{sigma_max:.5f}", f"{delta_max:.6f}",f"{E:.6f}" ))
-            
-        else:
-            print("Tipo de sección no reconocido.")
-            return None
+            resultados.append((f"{sigma_max:.5f}", f"{def_uni:.7f}",f"{E:.6f}" ))
         
     # Calcular el promedio de los valores de G
     promedio_E = sum(valores_E) / len(valores_E)
@@ -665,14 +683,14 @@ def abrir_ventana_grafica_flexion(pesos, desplazamientos, Diametro, longitud, ba
     def crear_tabla(frame):
         # Crear tabla de resultados
         tabla_grafica_flexion = ttk.Treeview(ventana_grafica_flexion)
-        tabla_grafica_flexion["columns"] = ("sigma_max", "y")  
+        tabla_grafica_flexion["columns"] = ("sigma_max", "def_uni")  
         tabla_grafica_flexion.heading("sigma_max", text="σ máx [MPa]")
-        tabla_grafica_flexion.heading("y", text="ε")
+        tabla_grafica_flexion.heading("def_uni", text="ε")
 
         # Ajustar el ancho de las columnas
         tabla_grafica_flexion.column("#0", width=40, anchor="center") 
         tabla_grafica_flexion.column("sigma_max", width=100, anchor="center")
-        tabla_grafica_flexion.column("y", width=100, anchor="center")
+        tabla_grafica_flexion.column("def_uni", width=100, anchor="center")
 
         for i, resultado in enumerate(resultados):
             tabla_grafica_flexion.insert("", "end", text=str(i+1), values=resultado)
