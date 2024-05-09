@@ -262,27 +262,41 @@ def abrir_ventana_datos_flexion():
     ventana_principal.withdraw()  # Ocultar la ventana principal
     ventana_datos_flexion = tk.Toplevel(ventana_principal)
     ventana_datos_flexion.title("Datos de Entrada - Flexión")
-    ventana_datos_flexion.geometry("600x600")
+    ventana_datos_flexion.geometry("1000x600")
     ventana_datos_flexion.iconbitmap('C:/Users/camil/Desktop/U/PG/PROGRAMA/logo_UA.ico')
 
     # Función para mostrar u ocultar los campos de entrada según la selección de la sección
     def mostrar_ocultar_rectangular():
+        
         if seleccion_seccion.get() == "Rectangular":
+            #mostrar campos para la seccion rectangular
             etiqueta_base.grid(row=2, column=0, padx=10, pady=5, sticky="w")
             base.grid(row=2, column=1, padx=10, pady=5)
             etiqueta_altura.grid(row=3, column=0, padx=10, pady=5, sticky="w")
             altura.grid(row=3, column=1, padx=10, pady=5)
+            
             # Ocultar los campos de la sección circular
             etiqueta_diametro.grid_remove()
             Diametro.grid_remove()
+
+            # Mostrar imagen viga circular y ocultar viga rectangular
+            etiqueta_imagenr.grid(row=0, column=2, padx=10, pady=10, rowspan=9)
+            etiqueta_imagenc.grid_remove()
+            
         else:
             etiqueta_base.grid_remove()
             base.grid_remove()
             etiqueta_altura.grid_remove()
             altura.grid_remove()
+            #etiqueta_imagenr.grid_remove()
+            
             # Mostrar los campos de la sección circular
             etiqueta_diametro.grid(row=1, column=0, padx=10, pady=5, sticky="w")
             Diametro.grid(row=1, column=1, padx=10, pady=5)
+
+            # Mostrar imagen viga circular y ocultar viga rectangular
+            etiqueta_imagenc.grid(row=0, column=2, padx=10, pady=10, rowspan=10)
+            etiqueta_imagenr.grid_remove()
             
     # Etiquetas y campos de entrada para los datos de flexión
     etiqueta_seccion = tk.Label(ventana_datos_flexion, text="Sección de la barra:",  font=("Arial", 10, "bold"))
@@ -294,20 +308,35 @@ def abrir_ventana_datos_flexion():
     menu_seccion = tk.OptionMenu(ventana_datos_flexion, seleccion_seccion, *opciones_seccion)
     menu_seccion.grid(row=0, column=1, padx=10, pady=5)
 
+    # Crear las etiquetas de imagen fuera de la función
+    imagen_datos_flexionr = Image.open("C:/Users/camil/Desktop/U/PG/PROGRAMA/c_flexionR.png")
+    imagen_datos_flexionr = imagen_datos_flexionr.resize((450, 206))
+    imagen_datos_flexionr = ImageTk.PhotoImage(imagen_datos_flexionr)
+    etiqueta_imagenr = tk.Label(ventana_datos_flexion, image=imagen_datos_flexionr)
+    etiqueta_imagenr.image = imagen_datos_flexionr  # Asegurarse de mantener una referencia a la imagen
+    etiqueta_imagenr.grid(row=0, column=2, padx=10, pady=10, rowspan=10)  # Ajustar la posición según sea necesario
+
+    imagen_datos_flexionc = Image.open("C:/Users/camil/Desktop/U/PG/PROGRAMA/c_flexion.png")
+    imagen_datos_flexionc = imagen_datos_flexionc.resize((442, 200))
+    imagen_datos_flexionc = ImageTk.PhotoImage(imagen_datos_flexionc)
+    etiqueta_imagenc = tk.Label(ventana_datos_flexion, image=imagen_datos_flexionc)
+    etiqueta_imagenc.image = imagen_datos_flexionc  # Asegurarse de mantener una referencia a la imagen
+    etiqueta_imagenc.grid(row=0, column=2, padx=10, pady=10, rowspan=10)  # Ajustar la posición según sea necesario
+
     # Otros campos de entrada
-    etiqueta_diametro = tk.Label(ventana_datos_flexion, text="Diámetro de la sección [mm]:",  font=("Arial", 10, "bold"))
+    etiqueta_diametro = tk.Label(ventana_datos_flexion, text="Diámetro de la sección (D) [mm]:",  font=("Arial", 10, "bold"))
     Diametro = tk.Entry(ventana_datos_flexion)
 
-    etiqueta_base = tk.Label(ventana_datos_flexion, text="Base de la sección [mm]:",  font=("Arial", 10, "bold"))
+    etiqueta_base = tk.Label(ventana_datos_flexion, text="Base de la sección (B) [mm]:",  font=("Arial", 10, "bold"))
     base = tk.Entry(ventana_datos_flexion)
 
-    etiqueta_altura = tk.Label(ventana_datos_flexion, text="Altura de la sección [mm]:",  font=("Arial", 10, "bold"))
+    etiqueta_altura = tk.Label(ventana_datos_flexion, text="Altura de la sección (H) [mm]:",  font=("Arial", 10, "bold"))
     altura = tk.Entry(ventana_datos_flexion)
 
-    etiqueta_longitud = tk.Label(ventana_datos_flexion, text="Longitud de la barra [mm]:",  font=("Arial", 10, "bold"))
+    etiqueta_longitud = tk.Label(ventana_datos_flexion, text="Longitud de la barra (L) [mm]:",  font=("Arial", 10, "bold"))
     longitud = tk.Entry(ventana_datos_flexion)
 
-    etiqueta_seccion_1 = tk.Label(ventana_datos_flexion, text="Sección 1 aplicación de la carga [mm]:",  font=("Arial", 10, "bold"))
+    etiqueta_seccion_1 = tk.Label(ventana_datos_flexion, text="Sección a aplicación de la carga [mm]:",  font=("Arial", 10, "bold"))
     seccion1 = tk.Entry(ventana_datos_flexion)
     etiqueta_deflexion = tk.Label(ventana_datos_flexion, text="Donde se mide la deflexión:",  font=("Arial", 10, "bold"))
     opciones_deflexion = ["Centro de la barra", "En x <= a", "En x > a"]
@@ -315,7 +344,7 @@ def abrir_ventana_datos_flexion():
     seleccion_deflexion.set(opciones_deflexion[0])  # Seleccionar la primera opción por defecto
     menu_deflexion = tk.OptionMenu(ventana_datos_flexion, seleccion_deflexion, *opciones_deflexion)
 
-    etiqueta_punto_deflexion = tk.Label(ventana_datos_flexion, text="Punto donde se mide la deflexión [mm]:",  font=("Arial", 10, "bold"))
+    etiqueta_punto_deflexion = tk.Label(ventana_datos_flexion, text="Punto x donde se mide la deflexión [mm]:",  font=("Arial", 10, "bold"))
     punto_deflexion = tk.Entry(ventana_datos_flexion)
 
     etiqueta_longitud.grid(row=5, column=0, padx=10, pady=5, sticky="w")
@@ -395,7 +424,7 @@ def abrir_ventana_datos_flexion():
     boton_inicio.grid(row=16, column=0, pady=10, sticky="nsew")
 
     boton_calcular = tk.Button(ventana_datos_flexion, text="Calcular", font=("Arial", 10, "bold"), command=guardar_datos_flexion)
-    boton_calcular.grid(row=16, column=1, columnspan=2, pady=10, sticky="nsew")
+    boton_calcular.grid(row=16, column=1, pady=10, sticky="nsew")
 
 def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud, base, altura, seccion1, punto_deflexion,seleccion_deflexion,seleccion_seccion):
     ventana_resultados_flexion = tk.Toplevel(ventana_principal)
@@ -414,7 +443,6 @@ def abrir_ventana_resultados_flexion(pesos, desplazamientos, Diametro, longitud,
             B = base
             H = altura
             
-
             # Calcular Sección 2 de aplicación de la carga en mm
             b = longitud - seccion1
             c = H / 2
